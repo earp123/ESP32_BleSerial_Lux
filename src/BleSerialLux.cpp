@@ -1,4 +1,4 @@
-#include "BleSerial.h"
+#include "BleSerialLux.h"
 using namespace std;
 
 bool BleSerial::connected()
@@ -118,6 +118,7 @@ size_t BleSerial::write(uint8_t byte)
 	return 1;
 }
 
+
 void BleSerial::flush()
 {
 	if (this->transmitBufferLength > 0)
@@ -127,6 +128,18 @@ void BleSerial::flush()
 	}
 	this->lastFlushTime = millis();
 	TxCharacteristic->notify(true);
+}
+
+size_t BleSerial::writeLux(uint16_t lux)
+{
+	if (Server->getConnectedCount() <= 0)
+	{
+		return 0;
+	}
+	LuxCharacteristic->setValue(lux, 2);
+	LuxCharacteristic->notify(true);
+
+	return 2;
 }
 
 void BleSerial::begin(const char *name, bool enable_led, int led_pin)
@@ -146,9 +159,12 @@ void BleSerial::begin(const char *name, bool enable_led, int led_pin)
 	Server->setCallbacks(this);
 
 	SetupSerialService();
+	SetupIlluminanceService();
 
 	pAdvertising = BLEDevice::getAdvertising();
 	pAdvertising->addServiceUUID(BLE_SERIAL_SERVICE_UUID);
+	pAdvertising->addServiceUUID(BLE_USERDATA_SERVICE_UUID);
+	pAdvertising->addServiceUUID(BLE_USERDATA_SERVICE_UUID);
 	pAdvertising->setScanResponse(true);
 	pAdvertising->setMinPreferred(0x06);
 	pAdvertising->setMinPreferred(0x12);
@@ -194,6 +210,25 @@ void BleSerial::SetupSerialService()
 	RxCharacteristic->setCallbacks(this);
 	SerialService->start();
 }
+
+void BleSerial::SetupIlluminanceService()
+{
+	// using the SIG 'User Data' service and the SIG Illuminance Characteristic
+
+	LuxService = Server->createService(BLE_USERDATA_SERVICE_UUID);
+
+	LuxCharacteristic = LuxService->createCharacteristic(
+		BLE_ILLUMINANCE_UUID, BLECharacteristic::PROPERTY_NOTIFY);
+
+	LuxCharacteristic->setAccessPermissions(ESP_GATT_PERM_READ_ENCRYPTED);
+
+	LuxCharacteristic->addDescriptor(new BLE2902());
+
+	LuxCharacteristic->setReadProperty(true);
+
+	LuxService->start();
+}
+
 
 BleSerial::BleSerial()
 {
