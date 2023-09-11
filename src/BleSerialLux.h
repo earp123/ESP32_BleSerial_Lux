@@ -30,6 +30,7 @@ public:
 	size_t print(const char *value);
 	void onConnect(BLEServer *pServer);
 	void onDisconnect(BLEServer *pServer);
+	void writeLux();
 
 	bool connected();
 
