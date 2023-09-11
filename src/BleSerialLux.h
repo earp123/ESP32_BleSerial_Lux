@@ -40,10 +40,12 @@ public:
 
 	//Services
 	BLEService *SerialService;
+	BLEService *LuxService;
 
 	//Serial Characteristics
 	BLECharacteristic *TxCharacteristic;
 	BLECharacteristic *RxCharacteristic;
+	BLECharacteristic *LuxCharacteristic;
 
 	bool enableLed = false;
 	int ledPin = 13;
@@ -63,6 +65,7 @@ private:
 
 	int ConnectedDeviceCount;
 	void SetupSerialService();
+	void SetupIlluminanceService();
 
 	uint16_t peerMTU;
 	uint16_t maxTransferSize = BLE_BUFFER_SIZE;
@@ -75,6 +78,9 @@ private:
 	const char *BLE_SERIAL_SERVICE_UUID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
 	const char *BLE_RX_UUID = "6e400002-b5a3-f393-e0a9-e50e24dcca9e";
 	const char *BLE_TX_UUID = "6e400003-b5a3-f393-e0a9-e50e24dcca9e";
+
+	const char *BLE_USERDATA_SERVICE_UUID = "181c";
+	const char *BLE_ILLUMINANCE_UUID = "2afb";
 
 	bool started = false;
 };
