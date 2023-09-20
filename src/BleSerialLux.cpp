@@ -130,16 +130,21 @@ void BleSerial::flush()
 	TxCharacteristic->notify(true);
 }
 
-size_t BleSerial::writeLux(uint16_t lux)
+void BleSerial::writeLux(uint16_t lux)
 {
 	if (Server->getConnectedCount() <= 0)
 	{
-		return 0;
+		return;
 	}
-	LuxCharacteristic->setValue(lux, 2);
+	
+	uint8_t lux_msb = lux << 8;
+	uint8_t lux_lsb = lux;
+	
+	uint8_t lux_p[2] = {lux_msb, lux_lsb};
+	
+	LuxCharacteristic->setValue(lux_p, 2);
 	LuxCharacteristic->notify(true);
 
-	return 2;
 }
 
 void BleSerial::begin(const char *name, bool enable_led, int led_pin)
@@ -163,7 +168,6 @@ void BleSerial::begin(const char *name, bool enable_led, int led_pin)
 
 	pAdvertising = BLEDevice::getAdvertising();
 	pAdvertising->addServiceUUID(BLE_SERIAL_SERVICE_UUID);
-	pAdvertising->addServiceUUID(BLE_USERDATA_SERVICE_UUID);
 	pAdvertising->addServiceUUID(BLE_USERDATA_SERVICE_UUID);
 	pAdvertising->setScanResponse(true);
 	pAdvertising->setMinPreferred(0x06);
@@ -220,7 +224,7 @@ void BleSerial::SetupIlluminanceService()
 	LuxCharacteristic = LuxService->createCharacteristic(
 		BLE_ILLUMINANCE_UUID, BLECharacteristic::PROPERTY_NOTIFY);
 
-	LuxCharacteristic->setAccessPermissions(ESP_GATT_PERM_READ_ENCRYPTED);
+	LuxCharacteristic->setAccessPermissions(ESP_GATT_PERM_READ);
 
 	LuxCharacteristic->addDescriptor(new BLE2902());
 
